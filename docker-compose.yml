@@ -1,0 +1,20 @@
+services:
+  dynamodblocalstack:
+    image: localstack/localstack
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
+      - DEFAULT_REGION=us-east-1
+    networks:
+      - localstack_network
+    volumes:
+      - "${PWD}/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"  # ready hook
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+networks:
+  localstack_network:
+    driver: bridge

@@ -1,0 +1,55 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: lucasleaosobral
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: poc-serverless
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: test-lambda
+
+stages:
+  default:
+    params:
+      tableName: "todo-list-table-${sls:stage}"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [TodoListTable, Arn]
+  environment:
+    TODOLIST_TABLE: ${param:tableName}
+
+functions:
+  graphql:
+    handler: src/server.graphqlHandler
+    events:
+      - httpApi:
+          path: /graphql
+          method: get
+      - httpApi:
+          path: /graphql
+          method: post
+
+resources:
+  Resources:
+    TodoListTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${param:tableName}
